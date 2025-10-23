@@ -24,9 +24,10 @@ def generate_datacards_mutau(era, config, extratag,input_dir):
     os.system("./TauES_ID/harvestDatacards_TES_idSF_MCStat.py -y %s -c %s -e %s -i %s"%(era,config,extratag,input_dir)) 
 
 # Generating the datacards for mumu channel
-def generate_datacards_mumu(era, config_mumu, extratag, output_dir):
+def generate_datacards_mumu(era, config_mumu, extratag, output_dir, input_dir_mumu):
     print(' >>>>>> Generating datacards for mumu channel')
-    os.system("TauES_ID/harvestDatacards_zmm.py -y %s -c %s -e %s -o %s"%(era,config_mumu,extratag,output_dir)) # Generating the datacards with one statistics uncertianties for all processes
+    # os.system("TauES_ID/harvestDatacards_zmm.py -y %s -c %s -e %s -o %s"%(era,config_mumu,extratag,output_dir)) # Generating the datacards with one statistics uncertianties for all processes
+    os.system("TauES_ID/harvestDatacards_zmm.py -y %s -c %s -e %s -o %s -i %s"%(era,config_mumu,extratag,output_dir, input_dir_mumu)) # Generating the datacards with one statistics uncertianties for all processes
 
 # Merge the datacards between regions for combine fit and return the name of the combined datacard file
 def merge_datacards_regions(setup, setup_mumu, config_mumu, era, extratag):
@@ -169,7 +170,9 @@ def run_combined_fit(setup, setup_mumu, option, **kwargs):
             print(">>>>>>> Scan of "+POI)
             #POI_OPTS = "-P %s  --setParameterRanges %s=%s:tes_%s=%s -m 90 --setParameters r=1,rgx{.*tid.*}=1,rgx{.*tes.*}=1 --freezeParameters r,tes_%s --redefineSignalPOIs tes_%s --floatOtherPOIs 1" % (POI, POI, tid_SF_range,r,tes_range,r,r)  # tes_DM
             POI_OPTS = "-P %s --redefineSignalPOIs tes_%s --setParameterRanges %s=%s:tes_%s=%s -m 90 --setParameters r=1,rgx{.*tid.*}=1,rgx{.*tes.*}=1 --freezeParameters r --floatOtherPOIs=1" % (POI,r, POI, tid_SF_range, r,tes_range)  # tes_DM
+            # POI_OPTS = "-P %s --redefineSignalPOIs tes_%s --setParameterRanges %s=%s:tes_%s=%s -m 90 --setParameters r=1,rgx{.*tid.*}=1,rgx{.*tes.*}=1 --freezeParameters r,rgx{.*sf_W.*} --floatOtherPOIs=1" % (POI,r, POI, tid_SF_range, r,tes_range)
             MultiDimFit_opts = " %s %s %s -n .%s %s %s %s %s --trackParameters rgx{.*tid.*},rgx{.*W.*},rgx{.*dy.*} --saveInactivePOI=1 " %(workspace, algo, POI_OPTS, BINLABELoutput,fit_opts, xrtd_opts, cmin_opts, save_opts)
+            # MultiDimFit_opts = " %s %s %s -n .%s %s %s %s %s --trackParameters rgx{.*tid.*},rgx{.*dy.*} --saveInactivePOI=1 " %(workspace, algo, POI_OPTS, BINLABELoutput,fit_opts, xrtd_opts, cmin_opts, save_opts)
             print("MultidimFit %s : " %(r), '\t', MultiDimFit_opts)
             os.system("combine -M MultiDimFit %s " %(MultiDimFit_opts))
 
@@ -269,11 +272,22 @@ def main(args):
     # # Generating the datacards for mutau channel
     generate_datacards_mutau(era=era, config=config,extratag=extratag, input_dir=input_dir)
 
+    # zhenyu 
+    output_dir=input_dir.replace('input', 'output')
+    output_dir = os.path.join(output_dir, era)
+    print("DZY: indir=output_dir="+output_dir)
     # Generating the datacards for mumu channel
     if str(config_mumu) != 'None':
-        output_dir=input_dir.replace('input', 'output')
-        output_dir = os.path.join(output_dir, era)
-        generate_datacards_mumu(era=era, config_mumu=config_mumu,extratag=extratag, output_dir=output_dir)
+        # output_dir=input_dir.replace('input', 'output')
+        # output_dir = os.path.join(output_dir, era)
+        base_input_dir = os.path.dirname(os.path.dirname(input_dir))
+        input_dir_mumu = os.path.join(base_input_dir, "mumu_channel") # <--- 定义mumu的输入目录
+        
+        if not os.path.exists(input_dir_mumu):
+            print(f"Error: Zmumu input directory '{input_dir_mumu}' does not exist! Please create it and generate the input files.")
+            sys.exit(1)
+
+        generate_datacards_mumu(era=era, config_mumu=config_mumu,extratag=extratag, output_dir=output_dir, input_dir_mumu=input_dir_mumu)
 
     # Run the fit using combine with the different options 
     run_combined_fit(setup,setup_mumu, era=era, input_dir=input_dir, config=config, config_mumu=config_mumu, option=option)

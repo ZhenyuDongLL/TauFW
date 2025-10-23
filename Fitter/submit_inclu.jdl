@@ -1,0 +1,29 @@
+# ===================================================================
+# template.jdl: 用于为单个作业生成配置
+# ===================================================================
+
+universe              = vanilla
+executable            = run_parallel_createinputs_inclu.sh
+
+# 参数将由提交脚本直接提供
+# 格式: <DM> <CMSSW_PATH> <EOS_OUTPUT_DIR>
+arguments             = DECAY_MODE_PLACEHOLDER /afs/cern.ch/user/z/zhdong/CMSSW_14_1_0_pre4/src /afs/cern.ch/user/z/zhdong/CMSSW_14_1_0_pre4/src/TauFW/Fitter/condor_outputs_inclu/tau_fitter
+
+# --- 资源请求 ---
+# 请求 8 个 CPU 核心
+request_cpus = 4
+# 请求 16 GB 内存
+request_memory = 3000 MB
+
+# --- 日志文件 ---
+# 为每个 DM 使用独立的日志文件，避免冲突
+output                = condor_logs/job_DECAY_MODE_PLACEHOLDER_$(ClusterId).out
+error                 = condor_logs/job_DECAY_MODE_PLACEHOLDER_$(ClusterId).err
+log                   = condor_logs/job_DECAY_MODE_PLACEHOLDER_$(ClusterId).log
+
+# --- 作业时长 ---
++JobFlavour           = "workday"
+
+# --- 提交队列 ---
+# 每次只提交一个作业，所以只需要 queue 1
+queue 1

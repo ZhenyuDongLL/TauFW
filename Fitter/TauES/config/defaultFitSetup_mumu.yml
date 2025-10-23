@@ -3,6 +3,8 @@
 
 channel: mumu
 
+tag: "_mumu_test_upart_v1"
+
 samples:
     filename: "$PICODIR/$SAMPLE_$CHANNEL$TAG.root"
     join: ["VV","TT","ST"]
@@ -15,11 +17,12 @@ baselineCuts: "q_1*q_2<0 && iso_1<0.15 && iso_2<0.15 && !lepton_vetoes && metfil
 
 regions:
     ZMM: 
+        title: "Zmm CR"
         definition: "q_1*q_2<0"
 
 observables:
     m_vis:
-        binning: [1, 60, 120]
+        binning: [20, 50,  150]
         extra:
             ymargin: 1.6
             rrange: 0.08

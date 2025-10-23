@@ -13,9 +13,15 @@ channel: mutau
 
 # Tag can be used to differentiate between scenarios
 
-tag: "_mutau_mt65_DM_Dt2p5_VSJetMedium_puppimet"
+# tag: "_mutau_mt65_DM_Dt2p5_VSJetMedium_puppimet"
+tag: "_mutau_mt65_DMonly_VVL_VSe_M_VSj_T_VSm_dzytest_upart_v2"
 
-baselineCuts: "q_1*q_2<0 && iso_1<0.15 && idDecayModeNewDMs_2 && idDeepTau2018v2p5VSjet_2>=5 && idDeepTau2018v2p5VSe_2>=2 && ^&& !lepton_vetoes_notau && metfilter "
+# baselineCuts: "q_1*q_2<0 && iso_1<0.15 && idDecayModeNewDMs_2 && idDeepTau2018v2p5VSjet_2>=5 && idDeepTau2018v2p5VSe_2>=2 && ^&& !lepton_vetoes_notau && metfilter "
+# baselineCuts: "q_1*q_2<0 && iso_1<0.15 && !lepton_vetoes_notau && metfilter && mt_1<65 && rawUParTVSe_2>=0.104 && rawUParTVSjet_2>=0.514 && rawUParTVSmu_2>=0.888 && (decayModeUParT_2==0 || decayModeUParT_2==1 || decayModeUParT_2==2 || decayModeUParT_2==10 || decayModeUParT_2==11 )" # && rawPNetVSjet_2>=0.881 && rawPNetVSe_2>=0.4  && rawPNetVSmu_2>=0.99" # && !idDecayModeNewDMs_2" 
+
+# VVL_VSe; M_VSj; T_VSm
+baselineCuts: "q_1*q_2<0 && iso_1<0.15 && !lepton_vetoes_notau && metfilter && mt_1<65 && rawUParTVSe_2>=0.268 && rawUParTVSjet_2>=0.251 && rawUParTVSmu_2>=0.915 && (decayModeUParT_2==0 || decayModeUParT_2==1 || decayModeUParT_2==2 || decayModeUParT_2==10 || decayModeUParT_2==11 )" # && rawPNetVSjet_2>=0.881 && rawPNetVSe_2>=0.4  && rawPNetVSmu_2>=0.99" # && !idDecayModeNewDMs_2" 
+
 # idDeepTau2018v2p5VSjet_2>=5 = Medium WP
 # idDeepTau2018v2p5VSe_2>=2 = VVLoose WP
 # idDeepTau2018v2p5VSmu_2>=4 = Tight WP
@@ -71,10 +77,10 @@ tid_SFRegions:
 
 observables:
     m_vis:
-        binning: [10,50, 150] #binning=10
+        binning: [22,40, 150] #binning=10
         title: "m_{vis}"
         extra:
-            cut: "50<m_vis && m_vis<150"
+            cut: "40<m_vis && m_vis<150"
         fitRegions: [DM0, DM1, DM10, DM11]
         scanRegions: ["DM0", "DM1", "DM10", "DM11"] 
 
@@ -83,6 +89,7 @@ observables:
 
 TESvariations: 
     values: [0.970, 0.972, 0.974, 0.976, 0.978, 0.980, 0.982, 0.986, 0.988, 0.990, 0.992, 0.994, 0.996, 0.998, 1.000, 1.002, 1.004, 1.006, 1.008, 1.010, 1.012, 1.014, 1.016, 1.018, 1.020, 1.022,1.024, 1.026, 1.028, 1.030] #1.024 0.984
+    # values: [0.970, 1.000, 1.030] #1.024 0.984
 
     processes: ["ZTT"]
 
@@ -123,30 +130,30 @@ systematics:
         name: "shape_mTauFake_$BIN"
         title: "+/- 3% LTF shape"
         variations: ["Up", "Down"]
-        sampleAppend: ["_LTFUp","_LTFDown"]
+        sampleAppend: ["_LTF1p030","_LTF0p970"]
     JTF:
         effect: "shape"
         processes: ["ZJ", "TTJ", "W"]
         name: "shape_jTauFake_$BIN"
         title: "+/- 10% JTF"
         variations: ["Up", "Down"]
-        sampleAppend: ["_JTFUp","_JTFDown"]
-    # shape_mTauFake: # Not defined for 2022
-    #     effect: "shape"
-    #     processes: ["ZL", "TTL"]
-    #     name: "shape_mTauFakeSF"
-    #     title: "LTF rate syst"
-    #     variations: ["Up", "Down"]
-    #     nomWeight: "ltfweight_2"
-    #     altWeights: ["ltfweightUp_2", "ltfweightDown_2"]
+        sampleAppend: ["_JTF1p100","_JTF0p900"]
+    shape_mTauFake: # Not defined for 2022
+        effect: "shape"
+        processes: ["ZL", "TTL"]
+        name: "shape_mTauFakeSF"
+        title: "LTF rate syst"
+        variations: ["Up", "Down"]
+        nomWeight: "ltfweight_2"
+        altWeights: ["ltfweightUp_2", "ltfweightDown_2"]
     shape_dy:
         effect: "shape"
         processes: ["ZTT", "ZL", "ZJ"]
         name: "shape_dy"
         title: "+/- 10% Zptweight"
         variations: ["Up", "Down"]
-        nomWeight: "zptweight"
-        altWeights: ["(zptweight+0.1*(zptweight-1))", "(zptweight-0.1*(zptweight-1))"]
+        nomWeight: "zptweight_nnlo"
+        altWeights: ["(zptweight_nnlo+0.1*(zptweight_nnlo-1))", "(zptweight_nnlo-0.1*(zptweight_nnlo-1))"]
     muonFakerate:
         effect: "lnN"
         processes: ["ZL", "TTL"]
@@ -159,10 +166,10 @@ systematics:
         effect: "lnN"
         processes: ["ZTT", "ZL", "ZJ", "TTT", "TTL", "TTJ", "W", "ST", "VV"]
         scaleFactor: 1.02
-    # xsec_dy:
-    #     effect: "lnN"
-    #     processes: ["ZTT", "ZL", "ZJ"]
-    #     scaleFactor: 1.02
+    xsec_dy:
+        effect: "lnN"
+        processes: ["ZTT", "ZL", "ZJ"]
+        scaleFactor: 1.02
     xsec_tt:
         effect: "lnN"
         processes: ["TTT", "TTL", "TTJ"]
@@ -175,10 +182,10 @@ systematics:
         effect: "lnN"
         processes: ["VV"]
         scaleFactor: 1.05
-    # norm_wj:
-    #     effect: "lnN"
-    #     processes: ["W"]
-    #     scaleFactor: 1.08
+    norm_wj:
+        effect: "lnN"
+        processes: ["W"]
+        scaleFactor: 1.08
     norm_qcd:
         effect: "lnN"
         processes: ["QCD"]

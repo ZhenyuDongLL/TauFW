@@ -348,7 +348,7 @@ class ModuleTauPair(Module):
       if jet.DeltaR(tau1)<0.5: continue
       if jet.DeltaR(tau2)<0.5: continue
       # if "v15" not in self.era: #NanoAODv15 doesn't have the jetID branch
-      if jet.jetId<2: continue # Tight
+      # if jet.jetId<2: continue # Tight 
       
       # SAVE JEC VARIATIONS
       if self.dojec:

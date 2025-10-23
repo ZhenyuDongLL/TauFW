@@ -177,9 +177,14 @@ def run_combined_fit(setup, setup_mumu, option, **kwargs):
             # Incorporate the parameters from the file into the fit command
             param_opts = ",".join([f"{key}={value}" for key, value in params.items()])
             print("param_opts : %s" %(param_opts))
-            POI_OPTS_F = "--saveNLL --setParameters r=1,%s --setParameterRanges tes_%s=%s:tid_SF_%s=%s:sf_W_%s=0.0,10.0 --freezeParameters r" % (param_opts,r,tes_range,r,tid_SF_range,r)  # tes_DM
-            MutliFitout = "output_%s/higgsCombine.%s.MultiDimFit.mH90.root" %(era, BINLABELoutput)
-            FitDiagnostics_opts = " -m 90  %s %s -n .%s %s %s " %(MutliFitout, POI_OPTS_F, BINLABELoutput, xrtd_opts, cmin_opts)
+
+            # POI_OPTS_F = "--saveNLL --setParameters r=1,%s --setParameterRanges tes_%s=%s:tid_SF_%s=%s:sf_W_%s=0.0,10.0 --freezeParameters r" % (param_opts,r,tes_range,r,tid_SF_range,r)  # tes_DM
+            # MutliFitout = "output_%s/higgsCombine.%s.MultiDimFit.mH90.root" %(era, BINLABELoutput)
+            POI_OPTS_F = "--saveShapes --saveWithUncertainties --saveNLL --setParameters r=1,%s --setParameterRanges tes_%s=%s:tid_SF_%s=%s:sf_W_%s=0.0,10.0 --freezeParameters r" % (param_opts,r,tes_range,r,tid_SF_range,r)
+            # FitDiagnostics_opts = " -m 90  %s %s -n .%s %s %s " %(MutliFitout, POI_OPTS_F, BINLABELoutput, xrtd_opts, cmin_opts)
+            FitDiagnostics_opts = " -m 90  %s %s -n .%s %s %s " %(workspace, POI_OPTS_F, BINLABELoutput, xrtd_opts, cmin_opts)
+            
+
             os.system("combine -M FitDiagnostics %s --redefineSignalPOIs tes_%s,tid_SF_%s  --plots  " %(FitDiagnostics_opts,r,r))
             print("FitDiagnostics %s : " %(r))
 
@@ -267,7 +272,7 @@ if __name__ == '__main__':
 
     argv = sys.argv
     parser = ArgumentParser(prog="makeTESfit", description="execute all steps to run TES fit")
-    parser.add_argument('-y', '--era', dest='era', choices=['2016', '2017', '2018', 'UL2016_preVFP','UL2016_postVFP', 'UL2017', 'UL2018','UL2018_v10','2022_postEE','2022_preEE'], default=['UL2018'], action='store', help="set era")
+    parser.add_argument('-y', '--era', dest='era', choices=['2016', '2017', '2018', 'UL2016_preVFP','UL2016_postVFP', 'UL2017', 'UL2018','UL2018_v10','2022_postEE','2022_preEE', '2024'], default=['UL2018'], action='store', help="set era")
     parser.add_argument('-c', '--config', dest='config', type=str, default='TauES_ID/config/defaultFitSetupTES_mutau.yml', action='store', help="set config file containing sample & fit setup")
     parser.add_argument('-o', '--option', dest='option', choices=['1', '2', '3', '4', '5','6'], default='1', action='store',
                         help="set option : Scan of tes and tid SF is profiled (-o 1) ;  Scan of tid SF and tes is profiled (-o 2) ; 2D scan of tes and tid SF (-o 3) \

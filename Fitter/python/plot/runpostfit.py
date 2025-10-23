@@ -16,7 +16,7 @@ def main(args):
 
         else:
             print(">>>   Region: %s"%(region))
-            era = "UL2018_v10" ## Hardcoded
+            era = "2024" ## Hardcoded
             # Define the parameters
             fname = './output_%s/fitDiag/PostFitShape_%s_%s_%s.root' %(era,era,tag,region)
             # bin = 'DM0'  # This should match the bin name in your ROOT file

@@ -33,10 +33,11 @@ def main(args):
   againstjet = args.againstjet
   againstelectron = args.againstelectron
   setupConfFile = args.config
+  outdirName = args.outdirname
   DM = args.DM
   inclusive = args.inclusive
   plot      = True
-  outdir    = ensuredir(f"input_dzytest_upart_v3/againstjet_{againstjet}/againstelectron_{againstelectron}")
+  outdir    = ensuredir(f"{outdirName}/againstjet_{againstjet}/againstelectron_{againstelectron}")
   plotdir   = ensuredir(outdir,"plots")
   analysis  = 'ztt'
 
@@ -229,6 +230,7 @@ if __name__ == "__main__":
   parser.add_argument('-i', '--inclusive', dest='inclusive', action='store_true', default=False, help="which pt region" )
   parser.add_argument('-j', '--jet', dest='againstjet', default='Medium', help="against jet cut")
   parser.add_argument('-e', '--electron', dest='againstelectron', default='VVLoose', help="against electron cut")
+  parser.add_argument('-o', '--outdirname', dest='outdirname', default='input_dzytest', help="outdirname")
   args = parser.parse_args()
   LOG.verbosity = args.verbosity
   PLOG.verbosity = args.verbosity

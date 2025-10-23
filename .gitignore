@@ -1,5 +1,43 @@
-*.pyc
+# Log files
+*.log
+*.out
+
+# Backup files
+*.bac
+*.backup
 *.bak
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Output, data, and plot directories
+# Using wildcards (*) to match all similar directories
+Fitter/condor_logs/
+Fitter/fianl_output*/
+Fitter/input_*/
+Fitter/output_*/
+Fitter/plots_*/
+Fitter/logs_createinputs/
+Fitter/input_Zmm_v2/
+
+# Condor job outputs
+condor_job_output_*.log
+
+# Specific generated files and directories
+#Fitter/run_parallel_*.sh
+#Fitter/submit_*.jdl
+#Fitter/submit_*.sh
+Fitter/tutorial/cards/
+Fitter/tutorial/input/
+Fitter/tutorial/*.json
+Fitter/tutorial/*.pdf
+PicoProducer/data/
+PicoProducer/runTESvar_*.sh
+
+# Personal test files (add more if needed)
+Fitter/zhdong.cc
+
 *.d
 *.so
 *.pcm

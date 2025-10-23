@@ -112,6 +112,17 @@ class ModuleMuTau_Inclusive(ModuleTauPair):
       if abs(tau.eta)>self.tauCutEta: continue
       if abs(tau.dz)>0.2: continue
       if abs(tau.charge)!=1: continue
+      # DeepTau2p5 cuts
+      if tau.rawDeepTau2018v2p5VSe>=0.099 and tau.rawDeepTau2018v2p5VSmu>=0.2949 and tau.rawDeepTau2018v2p5VSjet>=0.4083: 
+        pass 
+      # PNet cuts
+      elif tau.rawPNetVSe>=0.148 and tau.rawPNetVSmu>=0.8 and tau.rawPNetVSjet>=0.114: 
+        pass 
+      # UParT cuts
+      elif tau.rawUParTVSe>=0.078 and tau.rawUParTVSmu>=0.7 and tau.rawUParTVSjet>=0.05:
+        pass 
+      else:
+        continue
       if self.ismc:
         tau.es   = 1 # store energy scale for propagating to MET
         genmatch = tau.genPartFlav
