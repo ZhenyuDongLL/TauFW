@@ -1,4 +1,4 @@
-#! /usr/bin/env python3
+#! /usr/bin/env python
 """
 Date : June 2022 
 Author : @oponcet and Saskia Falke 
@@ -29,7 +29,7 @@ def harvest(setup, year, obs, **kwargs):
     era         = kwargs.get('era',        '%s-13TeV'%year  )
     analysis    = kwargs.get('analysis',   'ztt'            )
     indir       = kwargs.get('indir',      'input_%s'%year  )
-    outdir      = kwargs.get('outdir',     'output_%s'%year )
+    outdir      = kwargs.get('outdir',     'output_pt_less_region/%s'%year )
     multiDimFit = kwargs.get('multiDimFit')
     verbosity   = kwargs.get('verbosity')
     outtag      = tag+extratag
@@ -44,16 +44,16 @@ def harvest(setup, year, obs, **kwargs):
         icat += 1
         cats.append((icat, region))
         # if not given, assume all defined regions should be fitted (be careful with potential overlap!)
-        print(("region: %s") %(cats))
+        print(f"region: {cats}")
 
         signals = []
         backgrounds = []
         for proc in setup["processes"]:
-          if "ZTT" in proc:
+          if "ZTT" in proc or "ZL" in proc or "ZJ" in proc:
             signals.append(proc)
           elif not "data" in proc:
             backgrounds.append(proc)
-        print("Backgrounds: %s"%backgrounds)
+        print ("Backgrounds: %s"%backgrounds)
 
    
         harvester = CombineHarvester()
@@ -67,19 +67,19 @@ def harvest(setup, year, obs, **kwargs):
 
 
         print(green("\n>>> defining nuissance parameters ..."))
-  
-        if "systematics" in setup:
-          for sys in setup["systematics"]:
-            sysDef = setup["systematics"][sys]
-            scaleFactor = 1.0  
-            if "scaleFactor" in sysDef:
-              scaleFactor = sysDef["scaleFactor"]
-            harvester.cp().process(sysDef["processes"]).AddSyst(harvester, sysDef["name"] if "name" in sysDef else sys, sysDef["effect"], SystMap()(scaleFactor))
+
+        # if "systematics" in setup:
+        #   for sys in setup["systematics"]:
+        #     sysDef = setup["systematics"][sys]
+        #     scaleFactor = 1.0  
+        #     if "scaleFactor" in sysDef:
+        #       scaleFactor = sysDef["scaleFactor"]
+        #     harvester.cp().process(sysDef["processes"]).AddSyst(harvester, sysDef["name"] if "name" in sysDef else sys, sysDef["effect"], SystMap()(scaleFactor))
    
 
         # Add DY cross section 
-        harvester.cp().process(['ZTT','ZL','ZJ']).AddSyst(harvester, "xsec_dy" ,'rateParam', SystMap()(1.00))
-
+        # ############harvester.cp().process(['ZTT','ZL','ZJ']).AddSyst(harvester, "xsec_dy" ,'rateParam', SystMap()(1.00))
+        # harvester.cp().process(['ZLL']).AddSyst(harvester, "xsec_dy" ,'rateParam', SystMap()(1.00))
 
         # EXTRACT SHAPES
         print(green(">>> extracting shapes..."))
@@ -157,7 +157,7 @@ def harvest(setup, year, obs, **kwargs):
             print('>>> renaming "%s" -> "%s"'%(oldfilename,newfilename))
           else:
             print('>>> Warning! "%s" does not exist!'%(oldfilename))
-        
+
 def scaleProcess(process,scale): 
   """Help function to scale a given process."""
   process.set_rate(process.rate()*scale)
@@ -197,8 +197,7 @@ def main(args):
         observables.append(obs)
     
     # indir = "./input_pt_nbin6_moretes"
-    indir = args.input_dir  
-
+    indir = args.input 
     if args.multiDimFit:
         args.extratag += "_MDF"
 
@@ -217,16 +216,15 @@ if __name__ == '__main__':
   argv = sys.argv
   description = '''This script makes datacards with CombineHarvester.'''
   parser = ArgumentParser(prog="harvesterDatacards_TES",description=description,epilog="Succes!")
-  parser.add_argument('-y', '--year', dest='year', choices=['2016','2017','2018','UL2016_preVFP','UL2016_postVFP','UL2017','UL2018','UL2018_v10','2022_postEE','2022_preEE', '2023C', '2023D', '2024'], type=str, default=2018, action='store', help="select year")
+  parser.add_argument('-y', '--year', dest='year', choices=['2024','2016','2017','2018','UL2016_preVFP','UL2016_postVFP','UL2017','UL2018','UL2018_v10','2022_postEE','2022_preEE', '2023C', '2023D'], type=str, default=2018, action='store', help="select year")
   parser.add_argument('-c', '--config', dest='config', type=str, default='TauES/config/defaultFitSetupTES_mutau.yml', action='store', help="set config file containing sample & fit setup")
   parser.add_argument('-e', '--extra-tag', dest='extratag', type=str, default="", action='store', metavar='TAG', help="extra tag for output files")
   parser.add_argument('-M', '--multiDimFit', dest='multiDimFit', default=False, action='store_true', help="assume multidimensional fit with a POI for each DM")
   parser.add_argument('-v', '--verbose', dest='verbose', default=False, action='store_true', help="set verbose")
   parser.add_argument('-o', '--output_dir', dest='output_dir', help="outputdir")
-  parser.add_argument('-i', '--input_dir', dest='input_dir', help="input directory") # <--- 增加这一行
+  parser.add_argument('-i', '--input', dest='input', help="input directory")
   args = parser.parse_args()
 
   main(args)
   print(">>>\n>>> done harvesting\n")
-    
 

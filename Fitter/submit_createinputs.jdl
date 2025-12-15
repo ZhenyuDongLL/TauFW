@@ -3,11 +3,11 @@
 # ===================================================================
 
 universe              = vanilla
-executable            = run_parallel_createinputs_ptregions.sh
+executable            = run_createinputs.sh
 
 # Arguments will be provided directly by the submission script
 # Format: <DM> <CMSSW_PATH> <EOS_OUTPUT_DIR>
-arguments             = DECAY_MODE_PLACEHOLDER /afs/cern.ch/user/z/zhdong/CMSSW_14_1_0_pre4/src /afs/cern.ch/user/z/zhdong/CMSSW_14_1_0_pre4/src/TauFW/Fitter/condor_outputs_inclu_3pt/tau_fitter
+arguments             = all /afs/cern.ch/user/z/zhdong/CMSSW_14_1_0_pre4/src /afs/cern.ch/user/z/zhdong/CMSSW_14_1_0_pre4/src/TauFW/Fitter/condor_outputs_inclu_3pt/tau_fitter
 
 # --- Resource Requests ---
 # Request 4 CPU cores
@@ -22,7 +22,7 @@ error                 = condor_logs/job_DECAY_MODE_PLACEHOLDER_$(ClusterId).err
 log                   = condor_logs/job_DECAY_MODE_PLACEHOLDER_$(ClusterId).log
 
 # --- Job Duration ---
-+JobFlavour           = "testmatch"
++JobFlavour           = "workday"
 
 # --- Submission Queue ---
 # This file describes a single job, so we only need queue 1

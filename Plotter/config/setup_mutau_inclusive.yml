@@ -9,7 +9,7 @@
 
 
 # Typically, each channel will have its own config file; combination can be done at datacard level
-channel: mutau_inclusive
+channel: mutau
 # Tag can be used to differentiate between scenarios
 tag: ""
 
@@ -25,7 +25,8 @@ regions:
       definition: "mt_1<65"
       title: "signal region"
    upart_region:
-      definition: "mt_1<65 && rawUParTVSe_2>=0.104 && rawUParTVSjet_2>=0.514 && rawUParTVSmu_2>=0.888 && (decayModeUParT_2==0 || decayModeUParT_2==1 || decayModeUParT_2==2 || decayModeUParT_2==10 || decayModeUParT_2==11 )"
+      # definition: "mt_1<65 && rawUParTVSe_2>=0.104 && rawUParTVSjet_2>=0.514 && rawUParTVSmu_2>=0.888 && (decayModeUParT_2==0 || decayModeUParT_2==1 || decayModeUParT_2==2 || decayModeUParT_2==10 || decayModeUParT_2==11 )"
+      definition: "mt_1<65 && rawUParTVSe_2>=0.2343 && rawUParTVSjet_2>=0.2541 && rawUParTVSmu_2>=0.8359 && (decayModeUParT_2==0 || decayModeUParT_2==1 || decayModeUParT_2==2 || decayModeUParT_2==10 || decayModeUParT_2==11 )"
       title: "UParT"
    deepTau_region:
       definition: "mt_1<65 && idDecayModeNewDMs_2 && idDeepTau2018v2p5VSjet_2>=5 && idDeepTau2018v2p5VSe_2>=2 && idDeepTau2018v2p5VSmu_2>=4 && (dm_2==0 || dm_2==1 || dm_2==10 || dm_2==11 )"

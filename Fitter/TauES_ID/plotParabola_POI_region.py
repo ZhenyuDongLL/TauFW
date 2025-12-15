@@ -1,4 +1,4 @@
-#! /usr/bin/env python3
+#! /usr/bin/env python
 # Author: Izaak Neutelings (January 2018)
 # Modification: Oceane Poncet (June 2022)
 # Add Plotting regions in config file to specify it
@@ -11,6 +11,8 @@ import math
 from array import array
 from argparse import ArgumentParser
 import ROOT; ROOT.PyConfig.IgnoreCommandLineOptions = True
+import shutil
+import os
 from ROOT import gROOT, gPad, gStyle, TFile, TCanvas, TLegend, TLatex, TF1, TGraph, TGraph2D, TPolyMarker3D, TGraphAsymmErrors, TLine,\
                  kBlack, kBlue, kRed, kGreen, kYellow, kOrange, kMagenta, kTeal, kAzure, TMath
 from TauFW.Plotter.sample.utils import CMSStyle
@@ -89,7 +91,7 @@ def plotParabola(setup,var,region,year,**kwargs):
     file.Close()
     nllmin    = min(list_nll)
     print("nlmin: ", nllmin)
-    list_dnll = [n-nllmin for n in list_nll] # DeltaNLL 
+    list_dnll = [n - nllmin for n in list_nll] # DeltaNLL 
     # MINIMUM
     dnllmin         = min(list_dnll) # should be 0.0 by definition
     min_index       = list_dnll.index(dnllmin)
@@ -194,8 +196,8 @@ def plotParabola(setup,var,region,year,**kwargs):
       poif = para.GetParameter(1)
       if asymmetric:
         yline = 1+para.GetParameter(2)
-        print(("yline = " ,yline))
-        print(("para.GetParameter(1) = " ,para.GetParameter(1)))
+        print("yline = " ,yline)
+        print("para.GetParameter(1) = " ,para.GetParameter(1))
         poif_errDown = poif-para.GetX(yline,poif-0.05,poif)
         poif_errUp   = para.GetX(yline,poif,poif+0.05)-poif
         if math.isnan(poif_errDown) or math.isnan(poif_errUp):
@@ -221,7 +223,7 @@ def plotParabola(setup,var,region,year,**kwargs):
     # print("tmin_right = ", tmin_right)
     # print("tmin_left = ", tmin_left)
 
-    print(("shift = ", shift))
+    print("shift = ", shift)
     # RESULTS
     latex = TLatex()
     lines = [ ]
@@ -263,13 +265,13 @@ def plotParabola(setup,var,region,year,**kwargs):
       legend.Draw()
     if ctext:
       ctext = writeText(ctext,position='topright',textsize=0.80*fontsize)
-    
+
     print(">>> poi %7.3f - %-5.3f + %-5.3f"%(poi_val,poi_errDown,poi_errUp))
     print(">>> shift  %7.3f - %-5.3f + %-5.3f %%"%(shift,poi_errDown*100,poi_errUp*100))
     if fit:
       print(">>> poi %7.3f - %-5.3f + %-5.3f   (parabola)"%(poif,poif_errDown,poif_errUp))
       print(">>> shift  %7.3f - %-5.3f + %-5.3f %% (parabola)"%(poif-1,poif_errDown*100,poif_errUp*100))
-    
+
     text = TLatex()
     text.SetTextSize(fontsize)
     text.SetTextAlign(31)
@@ -305,7 +307,7 @@ def plotParabola(setup,var,region,year,**kwargs):
 def plotParabolaMDF(setup,var,year,**kwargs):
     """Plot multidimensional parabola."""
     print(green("plot multidimensional parabola for %s"%(var),pre="\n>>> "))
-    
+
     indir      = kwargs.get('indir',      "output_%s"%year )
     outdir     = kwargs.get('outdir',     "plots_%s"%year  )
     poi          = kwargs.get('poi',       ""              )
@@ -338,7 +340,7 @@ def plotParabolaMDF(setup,var,year,**kwargs):
       slices = { t:v for t,v in MDFslices.items() if t!=poi1 and t!=poi2 }
       #\print nnlmin, slices
       i = 0
-      for event in tree:
+      for i, event in enumerate(tree):
         if event.quantileExpected<0: continue
         if any(abs(getattr(event,t)-v)>0.000001 for t,v in slices.items()): continue
         nnl  = 2*event.deltaNLL-nnlmin
@@ -459,8 +461,8 @@ def fitParabola(xmin,xmax,poi,list_poi_left,list_dnll_left,list_poi_right,list_d
     wmin, wval, wmax = wmin_fit*0.20, wmin_fit, wmax_fit*1.80
     wmin_fit = 0
     wmax_fit = 50
-    print(("wmin_fit = ", wmin_fit))
-    print(("wmax_fit = ", wmax_fit))
+    print("wmin_fit = ", wmin_fit)
+    print("wmax_fit = ", wmax_fit)
     bmin, bval, bmax = tmin_fit, poi, tmax_fit
     cmin, cval, cmax = -0.0001, 0.0, 0.5 #max(min(ymax_fit,3),0.001)
     amin, aval, amax = -1000, 0.0, 1000
@@ -474,7 +476,7 @@ def fitParabola(xmin,xmax,poi,list_poi_left,list_dnll_left,list_poi_right,list_d
     print(">>> yoffset = %5s [%5s, %5s]"%(cval,cmin,cmax))
     if asymmetric:
       print(">>> w_asymm = %5s [%5s, %5s]"%(aval, amin, amax))
-    
+
     # FIT FUNCTION
     if asymmetric:
       #para = TF1("fit","[0]*1000*(x-[1])**2+[3]*10000*(x-[1])**3+[2]",xmin_fit,xmax_fit)
@@ -542,7 +544,7 @@ def createParabola(filename, poi, region):
     file.Close()
     minnll = min(nll)
     minpoi = poi[nll.index(minnll)]
-    dnll   = [x-minnll for x in nll] # DeltaNLL
+    dnll   = [x - minnll for x in nll] # DeltaNLL
     graph  = TGraph(len(poi), array('d',poi), array('d',dnll))
     return graph, minpoi
     
@@ -558,7 +560,7 @@ def findMultiDimSlices(channel,var,**kwargs):
     pois     = [b.GetName() for b in tree.GetListOfBranches() if 'poi_DM' in b.GetName()]
     slices   = { }
     nnlmin   = 10e10
-    for event in tree:
+    for i, event in enumerate(tree):
       nnl = 2*event.deltaNLL
       if nnl<nnlmin:
         nnlmin = nnl
@@ -580,7 +582,7 @@ def measurepoi(filename,poi,region,unc=False,fit=False,asymmetric=True,**kwargs)
     file = ensureTFile(filename)
     tree = file.Get('limit')
     poi_list, nll = [ ], [ ]
-    for event in tree:
+    for i, event in enumerate(tree):
       poiname = "%s_%s"%(poi,region) #combine DM
       poi_list.append(getattr(tree,poiname)) #combine DM
       #poi.append(tree.poi)
@@ -640,7 +642,7 @@ def measurepoi_fit(filename,poi,region,asymmetric=True,unc=False):
       list_nll.append(2*tree.deltaNLL)
     file.Close()
     nllmin    = min(list_nll)
-    list_dnll = [n-nllmin for n in list_nll] # DeltaNLL
+    list_dnll = [n - nllmin for n in list_nll] # DeltaNLL
     
     # MINIMUM
     dnllmin         = min(list_dnll) # should be 0.0 by definition
@@ -780,7 +782,7 @@ def plotMeasurements(setup, measurements,binsOrder,**kwargs):
     legend = None
     if entries:
       legtextsize = 0.052*scale
-      height      = legtextsize*1.08*len([o for o in [title,text]+list(zip(graphs,entries)) if o])
+      height = legtextsize*1.08*len([o for o in [title, text] + list(zip(graphs, entries)) if o])
       if 'out' in position:
         x1 = 0.008; x2 = x1+width
         y1 = 0.018; y2 = y1+height
@@ -898,22 +900,32 @@ def combineMeasurementsAsymm(measurements):
 #def sigmaPrime(sigmaM,sigmaP): return (sigmaM-sigmaP)/(sigmaP+sigmaM)
 
 def writeMeasurement(filename,categories,measurements,**kwargs):
-    """Write measurements to file."""
-    if ".txt" not in filename[-4]: filename += ".txt"
-    mformat = kwargs.get('format'," %10.4f %10.4f %10.4f") #" %10.6g %10.6g %10.6g"
-    sformat = re.sub(r"%(\d*).?\d*[a-z]",r"%\1s",mformat)
-    with open(filename,'w+') as file:
-      print(">>>   created txt file %s"%(filename))
-      startdate = time.strftime("%a %d/%m/%Y %H:%M:%S",time.gmtime())
-      file.write("%s\n"%(startdate))
-      for category, points in zip(categories,measurements):
-        file.write("%-10s"%category)
-        for point in points:
-          if point:
-            file.write(mformat%point)
-          else:
-            file.write(sformat%("-","-","-"))
-        file.write('\n')
+  # Write measurements to file
+  if not filename.endswith(".txt"):
+    filename += ".txt"
+  mformat = kwargs.get('format', " %10.4f %10.4f %10.4f")
+  sformat = re.sub(r"%(\d*).?\d*[a-z]", r"%\1s", mformat)
+  with open(filename, 'w+') as file:
+    print(f">>>   created txt file {filename}")
+    startdate = time.strftime("%a %d/%m/%Y %H:%M:%S", time.gmtime())
+    file.write(f"{startdate}\n")
+    for category, points in zip(categories, measurements):
+      file.write(f"{category:<10}")
+      for point in points:
+        if point:
+          file.write(mformat % point)
+        else:
+          file.write(sformat % ("-", "-", "-"))
+      file.write('\n')
+
+  # Always create a copy without the _fit_asymm suffix for summary plotting
+  base, ext = os.path.splitext(filename)
+  if '_fit_asymm' in base:
+    alt_filename = base.replace('_fit_asymm', '') + ext
+    try:
+      shutil.copyfile(filename, alt_filename)
+    except Exception as e:
+      print(f"Warning: Could not copy measurement file to {alt_filename}: {e}")
 
 def writeMeasurement_Json(setup,filename,categories,measurements,**kwargs):
     """Write measurements to file."""
@@ -928,8 +940,8 @@ def writeMeasurement_Json(setup,filename,categories,measurements,**kwargs):
       for category, points in zip(categories,measurements):
         for region in setup["regions"]:
           if category == region:
-            print(("category = ", category))
-            print(("region = ", region))
+            print("category = ", category)
+            print("region = ", region)
             region_def = setup["regions"][region]["definition"]
             file.write("\"%s: %-10s\""%(category,region_def))
             for point in points:
@@ -940,80 +952,77 @@ def writeMeasurement_Json(setup,filename,categories,measurements,**kwargs):
             file.write('\n')
 
 def readMeasurement(filename,**kwargs):
-    """Read measurements from file."""
-    if ".txt" not in filename[-4]: filename += ".txt"
-    measurements = dict()
-    with open(filename,'r') as file:
-      print(">>>   reading txt file %s"%(filename))
-      startdate = time.strftime("%a %d/%m/%Y %H:%M:%S",time.gmtime())
-      next(file)
-      for line in file:
-        points  = [ ]
-        columns = line.split()
-        i = 1
-        while len(columns[i:])>=3:
-          try:
-            points.append((float(columns[i]),float(columns[i+1]),float(columns[i+2])))
-          except ValueError:
-            points.append(None)
-          i += 3
-        measurements[columns[0]] = points
-    return measurements
-    
+  """Read measurements from file."""
+  if not filename.endswith(".txt"):
+    filename += ".txt"
+  measurements = dict()
+  with open(filename, 'r') as file:
+    print(f">>>   reading txt file {filename}")
+    next(file)  # skip date line
+    for line in file:
+      points = []
+      columns = line.split()
+      i = 1
+      while len(columns[i:]) >= 3:
+        try:
+          points.append((float(columns[i]), float(columns[i+1]), float(columns[i+2])))
+        except ValueError:
+          points.append(None)
+        i += 3
+      measurements[columns[0]] = points
+  return measurements
 def writeText(*text,**kwargs):
-    """Write text on plot."""
-    
-    position = kwargs.get('position',     'topleft'       ).lower()
-    textsize = kwargs.get('textsize',     0.040           )
-    font     = 62 if kwargs.get('bold',   False           ) else 42
-    align    = 13
-    if len(text)==1 and isinstance(text[0],list):
-      text = text[0]
-    else:
-      text     = ensureList(text)
-    if not text or not any(t!="" for t in text):
-      return None
-    L, R     = gPad.GetLeftMargin(), gPad.GetRightMargin()
-    T, B     = gPad.GetTopMargin(),  gPad.GetBottomMargin()
-    
-    if 'right' in position:
-      x, align = 0.96, 30
-    else:
-      x, align = 0.04, 10
-    if 'bottom' in position:
-      y = 0.05; align += 1
-    else:
-      y = 0.95; align += 3
-    x = L + (1-L-R)*x
-    y = B + (1-T-B)*y
+  """Write text on plot."""
+  position = kwargs.get('position',     'topleft'       ).lower()
+  textsize = kwargs.get('textsize',     0.040           )
+  font     = 62 if kwargs.get('bold',   False           ) else 42
+  align    = 13
+  if len(text)==1 and isinstance(text[0],list):
+    text = text[0]
+  else:
+    text = ensureList(text)
+  if not text or not any(t!="" for t in text):
+    return None
+  L, R     = gPad.GetLeftMargin(), gPad.GetRightMargin()
+  T, B     = gPad.GetTopMargin(),  gPad.GetBottomMargin()
 
-    latex = TLatex()
-    latex.SetTextSize(textsize)
-    latex.SetTextAlign(align)
-    latex.SetTextFont(font)
-    #latex.SetTextColor(kRed)
-    latex.SetNDC(True)
-    for i, line in enumerate(text):
-      latex.DrawLatex(x,y-i*1.2*textsize,line)
-    
-    return latex
-    
+  if 'right' in position:
+    x, align = 0.96, 30
+  else:
+    x, align = 0.04, 10
+  if 'bottom' in position:
+    y = 0.05; align += 1
+  else:
+    y = 0.95; align += 3
+  x = L + (1-L-R)*x
+  y = B + (1-T-B)*y
+
+  latex = TLatex()
+  latex.SetTextSize(textsize)
+  latex.SetTextAlign(align)
+  latex.SetTextFont(font)
+  #latex.SetTextColor(kRed)
+  latex.SetNDC(True)
+  for i, line in enumerate(text):
+    latex.DrawLatex(x, y - i*1.2*textsize, line)
+  return latex
+
 
 
 def stringWidth(*strings0):
-    """Make educated guess on the maximum length of a string."""
-    strings = list(strings0)
-    for string in strings0:
-      matches = re.search(r"#splitline\{(.*?)\}\{(.*?)\}",string) # check splitline
-      if matches:
-        while string in strings: strings.pop(strings.index(string))
-        strings.extend([matches.group(1),matches.group(2)])
-      matches = re.search(r"[_^]\{(.*?)\}",string) # check subscript/superscript
-      if matches:
-        while string in strings: strings.pop(strings.index(string))
-        strings.append(matches.group(1))
-      string = string.replace('#','')
-    return max([len(s) for s in strings])
+  """Make educated guess on the maximum length of a string."""
+  strings = list(strings0)
+  for string in strings0:
+    matches = re.search(r"#splitline\{(.*?)\}\{(.*?)\}",string) # check splitline
+    if matches:
+      while string in strings: strings.pop(strings.index(string))
+      strings.extend([matches.group(1),matches.group(2)])
+    matches = re.search(r"[_^]\{(.*?)\}",string) # check subscript/superscript
+    if matches:
+      while string in strings: strings.pop(strings.index(string))
+      strings.append(matches.group(1))
+    string = string.replace('#','')
+  return max([len(s) for s in strings])
     
 def marginCenter(canvas,axis,side='left',shift=0,margin=None):
     """Calculate the center of the right margin in units of a given axis"""
@@ -1035,7 +1044,7 @@ def green(string,**kwargs):
   
 def warning(string,**kwargs):
   print(">>> \x1b[1;33;40m%sWarning!\x1b[0;33;40m %s\033[0m"%(kwargs.get('pre',""),string))
-    
+
 def error(string,**kwargs):
   print(">>> \x1b[1;31;40m%sERROR!\x1b[0;31;40m %s\033[0m"%(kwargs.get('pre',""),string))
   exit(1)
@@ -1045,7 +1054,7 @@ def ensureDirectory(dirname):
   if not os.path.exists(dirname):
       os.makedirs(dirname)
       print(">>> made directory %s"%dirname)
-  
+
 def ensureTFile(filename,option='READ',**kwargs):
   """Open TFile and make sure if that it exists."""
   pre  = kwargs.get('pre',  ""   )
@@ -1071,7 +1080,7 @@ def ensureList(arg):
 
 
 def main(args):
-    
+
     print("Using configuration file: %s"%args.config)
     with open(args.config, 'r') as file:
         setup = yaml.safe_load(file)
@@ -1082,8 +1091,8 @@ def main(args):
     verbosity     = args.verbose
     poi           = args.poi
     year          = args.year
-    lumi          = 36.5 if year=='2016' else 41.4 if (year=='2017' or year=='UL2017') else 59.5 if (year=='2018' or year=='UL2018') else 19.5 if year=='UL2016_preVFP' else 16.8
-    indir         = args.indir
+    lumi          = 109
+    indir         = args.indir # if args.indir is not None else f"output_{args.year}"
     outdir        = indir.replace('output', 'plots')
     breakdown     = args.breakdown
     multiDimFit   = args.multiDimFit
@@ -1190,12 +1199,12 @@ def main(args):
 
 
 if __name__ == '__main__':
-    print() 
+    print 
     
     argv = sys.argv
     description = '''Plot parabolas.'''
     parser = ArgumentParser(prog="plotParabola",description=description,epilog="Succes!")
-    parser.add_argument('-y', '--year',        dest='year', choices=['2016','2017','2018','UL2016_preVFP','UL2016_postVFP','UL2017','UL2018', 'UL2018_v10','2022_postEE','2022_preEE', '2023C', '2023D', '2024'], type=str, default='2017', action='store', help="select year")
+    parser.add_argument('-y', '--year',        dest='year', choices=['2024','2016','2017','2018','UL2016_preVFP','UL2016_postVFP','UL2017','UL2018', 'UL2018_v10','2022_postEE','2022_preEE', '2023C', '2023D'], type=str, default='2017', action='store', help="select year")
     parser.add_argument('-c', '--config', dest='config', type=str, default='TauES/config/defaultFitSetuppoi_mutau.yml', action='store', help="set config file containing sample & fit setup" )
     parser.add_argument('-e', '--extra-tag',   dest='extratag', type=str, default="", action='store', metavar='TAG', help="extra tag for output files")
     parser.add_argument('-r', '--shift-range', dest='shiftRange', type=str, default="0.940,1.060", action='store', metavar='RANGE',       help="range of poi shifts")
@@ -1213,6 +1222,6 @@ if __name__ == '__main__':
     args = parser.parse_args()
     
     main(args)
-    print(">>>\n>>> done\n")
-    
+    print (">>>\n>>> done\n")
+
 

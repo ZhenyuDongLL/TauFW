@@ -11,13 +11,20 @@
 channel: mutau
 
 
-tag: "_test_upart_3pt_region_v2" #"_mutau_mt65_DM_pt_Dt2p5_puppimet"
+tag: "_upart_iteration_v1" #"_mutau_mt65_DM_pt_Dt2p5_puppimet"
 
 # baselineCuts: "q_1*q_2<0 && iso_1<0.15 && idDecayModeNewDMs_2 && idDeepTau2018v2p5VSjet_2>=5 && idDeepTau2018v2p5VSe_2>=2 && idDeepTau2018v2p5VSmu_2>=4 && !lepton_vetoes_notau && metfilter && mt_1<65 "
 # baselineCuts: "q_1*q_2<0 && iso_1<0.15 && !lepton_vetoes_notau && metfilter && mt_1<65 && rawUParTVSe_2>=0.104 && rawUParTVSjet_2>=0.514 && rawUParTVSmu_2>=0.888 && (decayModeUParT_2==0 || decayModeUParT_2==1 || decayModeUParT_2==2 || decayModeUParT_2==10 || decayModeUParT_2==11 )" # && rawPNetVSjet_2>=0.881 && rawPNetVSe_2>=0.4  && rawPNetVSmu_2>=0.99" # && !idDecayModeNewDMs_2" 
-baselineCuts: "q_1*q_2<0 && iso_1<0.15 && !lepton_vetoes_notau && metfilter && mt_1<65 && rawUParTVSe_2>=0.268 && rawUParTVSjet_2>=0.251 && rawUParTVSmu_2>=0.915 && (decayModeUParT_2==0 || decayModeUParT_2==1 || decayModeUParT_2==2 || decayModeUParT_2==10 || decayModeUParT_2==11 )" # && rawPNetVSjet_2>=0.881 && rawPNetVSe_2>=0.4  && rawPNetVSmu_2>=0.99" # && !idDecayModeNewDMs_2" 
+# baselineCuts: "q_1*q_2<0 && iso_1<0.15 && !lepton_vetoes_notau && metfilter && mt_1<65 && rawUParTVSe_2>=0.268 && rawUParTVSjet_2>=0.251 && rawUParTVSmu_2>=0.915 && (decayModeUParT_2==0 || decayModeUParT_2==1 || decayModeUParT_2==2 || decayModeUParT_2==10 || decayModeUParT_2==11 )" # && rawPNetVSjet_2>=0.881 && rawPNetVSe_2>=0.4  && rawPNetVSmu_2>=0.99" # && !idDecayModeNewDMs_2" 
+# baselineCuts: "q_1*q_2<0 && iso_1<0.15 && !lepton_vetoes_notau && metfilter && mt_1<65 && rawUParTVSe_2>=0.2343 && rawUParTVSjet_2>=0.2541 && rawUParTVSmu_2>=0.8359 && (decayModeUParT_2==0 || decayModeUParT_2==1 || decayModeUParT_2==2 || decayModeUParT_2==10 || decayModeUParT_2==11 )" # VSe VVL; VSjet M; VSmu T
 
-# idDeepTau2018v2p5VSjet_2>=5 = Medium WP
+# baselineCuts: "q_1*q_2<0 && iso_1<0.15 && !lepton_vetoes_notau && metfilter && mt_1<65 && rawUParTVSe_2>=0.2343 && rawUParTVSjet_2>=0.2541 && rawUParTVSmu_2>=0.8359" # VSe VVL; VSjet M; VSmu T
+
+# ID cuts (VSe, VSjet, VSmu) are now added dynamically by createinputsTES.py
+baselineCuts: "q_1*q_2<0 && iso_1<0.15 && !lepton_vetoes_notau && metfilter && mt_1<65" # idDeepTau2018v2p5VSjet_2>=5 = Medium WP
+
+
+
 # idDeepTau2018v2p5VSe_2>=2 = VVLoose WP
 # idDeepTau2018v2p5VSmu_2>=4 = Tight WP
 
@@ -30,59 +37,80 @@ baselineCuts: "q_1*q_2<0 && iso_1<0.15 && !lepton_vetoes_notau && metfilter && m
 
 regions:
     DM0:
-       definition: "dm_2==0"
+       definition: "decayModeUParT_2==0"
        title: "h^{#pm}"
     DM1:
-      definition: "dm_2==1"    
+      definition: "decayModeUParT_2==1"    
       title: "h^{#pm}#pi^{0}"
     DM10:
-      definition: "dm_2==10"
+      definition: "decayModeUParT_2==10"
       title: "h^{#pm}h^{#mp}h^{#pm}"
     DM11:
-      definition: "dm_2==11"
+      definition: "decayModeUParT_2==11"
       title: "h^{#pm}h^{#mp}h^{#pm}#pi^{0}"    
+    DM2:
+      definition: "decayModeUParT_2==2"    
+      title: "DM2"
     DM0_pt1: 
-        definition: "dm_2==0 && pt_2>20 && pt_2<40"
+        definition: "decayModeUParT_2==0 && pt_2>20 && pt_2<40"
         title: "h^{#pm}, pt: 20-40"
     DM0_pt2:
-        definition: "dm_2==0 && pt_2>=40 && pt_2<60"
+        definition: "decayModeUParT_2==0 && pt_2>=40 && pt_2<60"
         title: "h^{#pm}, pt: 40-60"
     DM0_pt3:
-        definition: "dm_2==0 && pt_2>=60 && pt_2<200"
+        definition: "decayModeUParT_2==0 && pt_2>=60 && pt_2<200"
         title: "h^{#pm}, pt: 60-200"
+        binning: [11, 40, 150] # Coarser binning for high pt
     DM1_pt1: 
-        definition: "dm_2==1 && pt_2>20 && pt_2<40"
+        definition: "decayModeUParT_2==1 && pt_2>20 && pt_2<40"
         title: "h^{#pm}#pi^{0}, pt: 20-40"
     DM1_pt2:
-        definition: "dm_2==1 && pt_2>=40 && pt_2<60"
+        definition: "decayModeUParT_2==1 && pt_2>=40 && pt_2<60"
         title: "h^{#pm}#pi^{0}, pt: 40-60"
     DM1_pt3:
-        definition: "dm_2==1 && pt_2>=60 && pt_2<200"
+        definition: "decayModeUParT_2==1 && pt_2>=60 && pt_2<200"
         title: "h^{#pm}#pi^{0}, pt: 60-200"
+        binning: [11, 40, 150] # Coarser binning for high pt
     DM10_pt1: 
-        definition: "dm_2==10 && pt_2>20 && pt_2<40"
+        definition: "decayModeUParT_2==10 && pt_2>20 && pt_2<40"
         title: "h^{#pm}h^{#mp}h^{#pm}, pt: 20-40"
     DM10_pt2:
-        definition: "dm_2==10 && pt_2>=40 && pt_2<60"
+        definition: "decayModeUParT_2==10 && pt_2>=40 && pt_2<60"
         title: "h^{#pm}h^{#mp}h^{#pm}, pt: 40-60"
     DM10_pt3:
-        definition: "dm_2==10 && pt_2>=60 && pt_2<200"
+        definition: "decayModeUParT_2==10 && pt_2>=60 && pt_2<200"
         title: "h^{#pm}h^{#mp}h^{#pm}, pt: 60-200"
+        binning: [11, 40, 150]
     DM11_pt1: 
-        definition: "dm_2==11 && pt_2>20 && pt_2<40"
+        definition: "decayModeUParT_2==11 && pt_2>20 && pt_2<40"
         title: "h^{#pm}h^{#mp}h^{#pm}#pi^{0}, pt: 20-40"
     DM11_pt2:
-        definition: "dm_2==11 && pt_2>=40 && pt_2<60"
+        definition: "decayModeUParT_2==11 && pt_2>=40 && pt_2<60"
         title: "h^{#pm}h^{#mp}h^{#pm}#pi^{0}, pt: 40-60"
     DM11_pt3:
-        definition: "dm_2==11 && pt_2>=60 && pt_2<200"
+        definition: "decayModeUParT_2==11 && pt_2>=60 && pt_2<200"
         title: "h^{#pm}h^{#mp}h^{#pm}#pi^{0}, pt: 60-200"
+        binning: [11, 40, 150]
+    DM2_pt1: 
+        definition: "decayModeUParT_2==2 && pt_2>20 && pt_2<40"
+        title: "DM2, pt: 20-40"
+    DM2_pt2:
+        definition: "decayModeUParT_2==2 && pt_2>=40 && pt_2<60"
+        title: "DM2, pt: 40-60"
+    DM2_pt3:
+        definition: "decayModeUParT_2==2 && pt_2>=60 && pt_2<200"
+        title: "DM2, pt: 60-200"
+        binning: [11, 40, 150]
 
-plottingOrder: ["DM0", "DM1", "DM10", "DM11",
-                "DM0_pt1", "DM0_pt2", "DM0_pt3", 
-                "DM1_pt1", "DM1_pt2", "DM1_pt3",
-                "DM10_pt1", "DM10_pt2", "DM10_pt3", 
-                "DM11_pt1", "DM11_pt2", "DM11_pt3"]
+plottingOrder: &region_list 
+            ["DM0", "DM1", "DM10", "DM11", "DM2", 
+            "DM0_pt1", "DM0_pt2", "DM0_pt3", 
+            "DM1_pt1", "DM1_pt2", "DM1_pt3",
+            "DM10_pt1", "DM10_pt2", "DM10_pt3", 
+            "DM11_pt1", "DM11_pt2", "DM11_pt3", 
+            "DM2_pt1", "DM2_pt2", "DM2_pt3",
+            ]
+            # ["DM0"]
 
 
 # Observable: to be fitted and plotted
@@ -95,22 +123,29 @@ observables:
         title: "m_{vis}"
         extra:
             cut: "40<m_vis && m_vis<150"
-        fitRegions: ["DM0", "DM1", "DM10", "DM11", 
-                     "DM0_pt1", "DM0_pt2", "DM0_pt3", 
-                     "DM1_pt1", "DM1_pt2", "DM1_pt3",
-                     "DM10_pt1", "DM10_pt2", "DM10_pt3",
-                     "DM11_pt1", "DM11_pt2", "DM11_pt3"] 
-        scanRegions: ["DM0", "DM1", "DM10", "DM11",
-                      "DM0_pt1", "DM0_pt2", "DM0_pt3", 
-                      "DM1_pt1", "DM1_pt2", "DM1_pt3",
-                      "DM10_pt1", "DM10_pt2", "DM10_pt3",
-                      "DM11_pt1", "DM11_pt2", "DM11_pt3"] 
+        fitRegions: *region_list
+        scanRegions: *region_list
+        # fitRegions: ["DM0", "DM1", "DM10", "DM11", "DM2", 
+                    #  "DM0_pt1", "DM0_pt2", "DM0_pt3", 
+                    #  "DM1_pt1", "DM1_pt2", "DM1_pt3",
+                    #  "DM10_pt1", "DM10_pt2", "DM10_pt3",
+                    #  "DM11_pt1", "DM11_pt2", "DM11_pt3",
+                    #  "DM2_pt1", "DM2_pt2", "DM2_pt3"] 
+        # scanRegions: ["DM0", "DM1", "DM10", "DM11", "DM2", 
+                    #   "DM0_pt1", "DM0_pt2", "DM0_pt3", 
+                    #   "DM1_pt1", "DM1_pt2", "DM1_pt3",
+                    #   "DM10_pt1", "DM10_pt2", "DM10_pt3",
+                    #   "DM11_pt1", "DM11_pt2", "DM11_pt3",
+                    #   "DM2_pt1", "DM2_pt2", "DM2_pt3"] 
 
 # Assume that this code is meant to fit TES variations; more options could be added when adding other POIs
 
 TESvariations:
     # Finer scanning step for smoother fit, as per discussion
-    values : [ 0.970, 0.972, 0.974, 0.976, 0.978, 0.980, 0.982, 0.986, 0.988, 0.990, 0.992, 0.994, 0.996, 0.998, 1.000, 1.002, 1.004, 1.006, 1.008, 1.010, 1.012, 1.014, 1.016, 1.018, 1.020, 1.022,1.024, 1.026, 1.028, 1.030] #1.024 0.984
+    # values : [ 0.970, 0.972, 0.974, 0.976, 0.978, 0.980, 0.982, 0.986, 0.988, 0.990, 0.992, 0.994, 0.996, 0.998, 1.000, 1.002, 1.004, 1.006, 1.008, 1.010, 1.012, 1.014, 1.016, 1.018, 1.020, 1.022,1.024, 1.026, 1.028, 1.030] #1.024 0.984
+    # values : [0.950, 0.960 ,0.970, 0.980, 0.990, 0.994, 1.006, 1.010, 1.020, 1.030, 1.040, 1.050]  
+    values : [0.950, 0.970, 0.980, 0.990, 0.994, 1.006, 1.010, 1.020, 1.030, 1.050]  
+
     processes: ["ZTT"]
 
 # Should add bin-by-bin variations (stat. uncertainties) for signal and backgrounds?
@@ -145,6 +180,8 @@ tesRegions:
         title: "DM10"
     DM11:
         title: "DM11"
+    DM2:
+        title: "DM2"
     DM0_pt1: 
         title: "DM0 20<p_{t_{#tau}}<40"
     DM0_pt2: 
@@ -169,6 +206,12 @@ tesRegions:
         title: "DM11 40<=p_{t_{#tau}}<60"
     DM11_pt3:
         title: "DM11 60<=p_{t_{#tau}}<200"
+    DM2_pt1: 
+        title: "DM2 20<p_{t_{#tau}}<40"
+    DM2_pt2: 
+        title: "DM2 40<=p_{t_{#tau}}<60"
+    DM2_pt3:
+        title: "DM2 60<=p_{t_{#tau}}<200"
 
 tid_SFRegions:
     DM0:
@@ -179,6 +222,8 @@ tid_SFRegions:
         title: "DM10"
     DM11:
         title: "DM11"
+    DM2:
+        title: "DM2"
     DM0_pt1: 
         title: "DM0 20<p_{t_{#tau}}<40"
     DM0_pt2: 
@@ -203,6 +248,12 @@ tid_SFRegions:
         title: "DM11 40<=p_{t_{#tau}}<60"
     DM11_pt3:
         title: "DM11 60<=p_{t_{#tau}}<200"
+    DM2_pt1: 
+        title: "DM2 20<p_{t_{#tau}}<40"
+    DM2_pt2: 
+        title: "DM2 40<=p_{t_{#tau}}<60"
+    DM2_pt3:
+        title: "DM2 60<=p_{t_{#tau}}<200"
 
 
 # Processes taken into account in analysis
@@ -226,22 +277,30 @@ systematics:
         title: "+/- 10% JTF"
         variations: ["Up", "Down"]
         sampleAppend: ["_JTF1p100","_JTF0p900"]
-    shape_mTauFake:
+    # shape_mTauFake:
+        # effect: "shape"
+        # processes: ["ZL", "TTL"]
+        # name: "shape_mTauFakeSF"
+        # title: "LTF rate syst"
+        # variations: ["Up", "Down"]
+        # nomWeight: "ltfweight_2"
+        # altWeights: ["ltfweightUp_2", "ltfweightDown_2"]
+    # shape_dy:
+        # effect: "shape"
+        # processes: ["ZTT", "ZL", "ZJ"]
+        # name: "shape_dy"
+        # title: "+/- 5% Zptweight"
+        # variations: ["Up", "Down"]
+        # nomWeight: "zptweight_nnlo" #???
+        # altWeights: ["((2*(zptweight_nnlo)) - 1)", "(2 - (zptweight_nnlo))"]
+    shape_ttbar: #<-- check if this is ok
         effect: "shape"
-        processes: ["ZL", "TTL"]
-        name: "shape_mTauFakeSF"
-        title: "LTF rate syst"
+        processes: [ "TTT", "TTL", "TTJ"]
+        name: "shape_ttbar_$BIN"
+        title: "+/- 3% ttptweight"
         variations: ["Up", "Down"]
-        nomWeight: "ltfweight_2"
-        altWeights: ["ltfweightUp_2", "ltfweightDown_2"]
-    shape_dy:
-        effect: "shape"
-        processes: ["ZTT", "ZL", "ZJ"]
-        name: "shape_dy"
-        title: "+/- 10% Zptweight"
-        variations: ["Up", "Down"]
-        nomWeight: "zptweight_nnlo" #???
-        altWeights: ["1.1*zptweight_nnlo", "0.9*zptweight_nnlo"]
+        nomWeight: "ttptweight" 
+        altWeights: ["pow(ttptweight,1.03)", "pow(ttptweight,0.97)"]
     lumi:
         effect: "lnN"
         processes: ["ZTT", "ZL", "ZJ", "TTT", "TTL", "TTJ", "W", "ST", "VV"] #processes: ["ZTT", "ZL", "ZJ", "TTT", "TTL", "TTJ", "W", "ST", "VV"]
@@ -277,8 +336,8 @@ systematics:
     norm_qcd:
         effect: "lnN"
         processes: ["QCD"]
-        scaleFactor: 1.10 # mettre 20 % ?s
+        scaleFactor: 1.20 # mettre 20 % ?s
     rate_jTauFake_$BIN:
         effect: "lnN"
-        processes: ["W","QCD","ZJ","TTJ","STJ"]
+        processes: ["W","QCD","ZJ","TTJ"]
         scaleFactor: 1.15

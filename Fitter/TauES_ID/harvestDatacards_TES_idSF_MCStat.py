@@ -1,4 +1,4 @@
-#! /usr/bin/env python3
+#! /usr/bin/env python
 """
 Date : May 2022 
 Author : @oponcet and Saskia Falke 
@@ -26,17 +26,26 @@ import ROOT
 from ROOT import RooWorkspace, TFile, RooRealVar
 
 def check_integral(filename, procs, name, region):
-   file = TFile(filename)
-   ret = []
-   name = name.replace('$BIN', region)
-   for proc in procs:
-     histname = region + '/' + proc + '_' + name
-     print((histname, '\t', filename))
-     histup = file.Get(histname+'Up').Integral()
-     histdn = file.Get(histname+'Down').Integral()
-     if histup and histdn: ret.append(proc)
-   print(('returning: ', name, '\t', ret))
-   return ret
+    from ROOT import TFile, TH1
+    file = TFile(filename)
+    ret = []
+    name = name.replace('$BIN', region)
+    for proc in procs:
+        histname = region + '/' + proc + '_' + name
+        print(histname, '\t', filename)
+        histup = file.Get(histname+'Up')
+        histdn = file.Get(histname+'Down')
+        # Check existence and type before using .Integral()
+        if not histup or not hasattr(histup, 'Integral'):
+            print(f"ERROR: Histogram '{histname}Up' not found or not a valid TH1 in file {filename}")
+            continue
+        if not histdn or not hasattr(histdn, 'Integral'):
+            print(f"ERROR: Histogram '{histname}Down' not found or not a valid TH1 in file {filename}")
+            continue
+        if histup and histdn:
+            ret.append(proc)
+    print('returning: ', name, '\t', ret)
+    return ret
 
 def harvest(setup, year, obs, **kwargs):
     """Harvest cards."""
@@ -65,17 +74,17 @@ def harvest(setup, year, obs, **kwargs):
         icat += 1
         cats.append((icat, region))
         # if not given, assume all defined regions should be fitted (be careful with potential overlap!)
-        print(("region: %s") %(cats))
+        print("region: %s" % (cats))
 
         signals = [] # ZTT is the signal
         backgrounds = []
-        for proc in setup["processes"]:
-          if "ZTT" in proc:
-            signals.append(proc)
-          elif not "data" in proc:
-            backgrounds.append(proc)
-        print(("Signals: %s"%signals))
-        print(("Backgrounds: %s"%backgrounds))
+        # Make ZTT, ZL and ZJ signals, but only ZTT will get TES and tid_SF
+        ztt_signals = [proc for proc in setup["processes"] if "ZTT" in proc]
+        other_z_signals = [proc for proc in setup["processes"] if any(x in proc for x in ["ZL","ZJ"])]
+        signals = ztt_signals + other_z_signals
+        backgrounds = [proc for proc in setup["processes"] if (proc not in signals and "data" not in proc)]
+        print("Signals: %s" % signals)
+        print("Backgrounds: %s" % backgrounds)
 
         if("TESvariations" in setup):
           print("Take TESvariations as defined in the config file")
@@ -91,11 +100,13 @@ def harvest(setup, year, obs, **kwargs):
         # Change flag causing bug : 
         harvester.SetFlag("workspaces-use-clone", True)
 
-        # Add Observation and process
+        # Add Observation and processes.
         harvester.AddObservations(['*'], [analysis], [era], [channel], cats)
         harvester.AddProcesses(['*'], [analysis], [era], [channel], backgrounds, cats, False)
-        # CAVEAT: Assume we always want to fit TES as POI; if running for mumu channel, everything will be bkg
-        harvester.AddProcesses(tesshifts, [analysis], [era], [channel], signals, cats, True)
+        # Add ZTT with mass points (TES morphing), and ZL/ZJ as signals without mass points
+        harvester.AddProcesses(tesshifts, [analysis], [era], [channel], ztt_signals, cats, True)
+        if other_z_signals:
+            harvester.AddProcesses(['*'], [analysis], [era], [channel], other_z_signals, cats, True)
 
         print(green("\n>>> defining nuissance parameters ..."))
   
@@ -109,7 +120,7 @@ def harvest(setup, year, obs, **kwargs):
             harvester.cp().process(sysDef["processes"]).AddSyst(harvester, sysDef["name"] if "name" in sysDef else sys, sysDef["effect"], SystMap()(scaleFactor))
             #print sysDef
 
-        # Adding id SF as a rate parameter affecting the signal ZTT 
+        # Adding id SF as a rate parameter affecting only ZTT
         listbin = region.split("_")
         tid_name = "tid_SF"
         # Recommended to define tid_SFRegions in the config file 
@@ -125,7 +136,7 @@ def harvest(setup, year, obs, **kwargs):
                   found_match = True
                   break
               if not found_match:
-                print(('region: ', region))
+                print('region: ', region)
                 print('ERROR : wrong definition of tid_SFRegions for in the config file')
         else: 
           if len(listbin) == 1: # Example : DM
@@ -133,9 +144,9 @@ def harvest(setup, year, obs, **kwargs):
           else: # Example : DM_pt
             tid_name = "tid_SF_%s"%(listbin[1]) # tid_SF_pt
         
-        print(("tid : %s" %(tid_name)))
-        # Add SF
-        harvester.cp().signals().AddSyst(harvester, tid_name,'rateParam', SystMap()(1.00))
+        print("tid : %s" % (tid_name))
+        # Add SF only to ZTT signals
+        harvester.cp().process(ztt_signals).AddSyst(harvester, tid_name,'rateParam', SystMap()(1.00))
 
         
         # Add W+Jets SF as a free parameter 
@@ -143,12 +154,21 @@ def harvest(setup, year, obs, **kwargs):
           print("W+Jets SF as a free parameter ")
           sf_W = "sf_W_%s"%(region)
           harvester.cp().process(['W']).AddSyst(harvester, sf_W,'rateParam', SystMap()(1.00))
-          print((">>>Add sf_W : %s" %(sf_W)))
+          print(">>>Add sf_W : %s" % (sf_W))
         
         # Add DY cross section as a free parameter. Don't forgot to add Zmm CR !
         if not "xsec_dy" in setup["systematics"]:
           print("DY cross section as a free parameter")
           harvester.cp().process(['ZTT','ZL','ZJ']).AddSyst(harvester, "xsec_dy" ,'rateParam', SystMap()(1.00))
+        def scaleProcess(process,scale): 
+          """Help function to scale a given process."""
+          process.set_rate(process.rate()*scale)
+
+        # if "scaleFactors"  in setup and "xsec_dy" in setup["scaleFactors"]:
+        #   print("DY cross section from config file")
+        #   xsec_def = setup["scaleFactors"]["xsec_dy"]
+        #   # rate = hist.GetBinContent(1)
+        #   harvester.cp().scaleProcess(xsec_def["processes"], xsec_def["value"])
 
         # Add DY cross section as a free parameter. Don't forgot to add Zmm CR !
         
@@ -159,23 +179,39 @@ def harvest(setup, year, obs, **kwargs):
 
         # EXTRACT SHAPES
         print(green(">>> extracting shapes..."))
-        print(">>>   file %s"%(filename))
-        ## For now assume that everything that is varied by TES is signal, and everything else is background
-        ## Could be revised if wanting to leave the possibility to do other variations or fit normalisation (e.g. for combined TES & ID SF fit)
+        print(">>>   file %s" % (filename))
+        # Extract shapes: backgrounds normal, ZTT with TES mass templates, ZL/ZJ normal templates
         harvester.cp().channel([channel]).backgrounds().ExtractShapes(filename, "$BIN/$PROCESS", "$BIN/$PROCESS_$SYSTEMATIC")
+        # ZTT: use TES templates if present
         
-        # For TES variations 
-        if("TESvariations" in setup):
-          #print green(">>> TESvariations...")
-          harvester.cp().channel([channel]).signals().ExtractShapes(filename, "$BIN/$PROCESS_TES$MASS", "$BIN/$PROCESS_TES$MASS_$SYSTEMATIC")
-        else:
-          harvester.cp().channel([channel]).signals().ExtractShapes(filename, "$BIN/$PROCESS", "$BIN/$PROCESS_$SYSTEMATIC")
+	############################
+	#HERE MIGHT BE PROBLEMATIC
+        if ztt_signals:
+            if("TESvariations" in setup):
+                harvester.cp().process(ztt_signals).ExtractShapes(filename, "$BIN/$PROCESS_TES$MASS", "$BIN/$PROCESS_$SYSTEMATIC")  #$BIN/$PROCESS_TES$MASS_$SYSTEMATIC  #$BIN/$PROCESS_TES$MASS_$SYSTEMATIC
+            else:
+                harvester.cp().process(ztt_signals).ExtractShapes(filename, "$BIN/$PROCESS", "$BIN/$PROCESS_$SYSTEMATIC")
+		# ZL/ZJ: regular templates (no TES)
+        if other_z_signals:
+            harvester.cp().process(other_z_signals).ExtractShapes(filename, "$BIN/$PROCESS", "$BIN/$PROCESS_$SYSTEMATIC")
+# ...existing code...
+        # backgrounds: normal templates (no TES)
+        # ZTT: use TES templates for the nominal, but read systematics from non‑TES names
+        # harvester.cp().process(ztt_signals).ExtractShapes(
+        #     filename,
+        #     "$BIN/$PROCESS_TES$MASS",   # e.g. DM0/ZTT_TES1.000
+        #     "$BIN/$PROCESS_$SYSTEMATIC" # e.g. DM0/ZTT_shape_dy_DM0Up
+        # )
+        # # ZL/ZJ: regular templates (no TES)
+        # harvester.cp().process(other_z_signals).ExtractShapes(filename, "$BIN/$PROCESS", "$BIN/$PROCESS_$SYSTEMATIC")
+# ...existing code...
+############################"$BIN/$PROCESS_TES$MASS", "$BIN/$PROCESS_$SYSTEMATIC")
 
 
-   
-        # ROOVAR
+       # ROOVAR
         workspace = RooWorkspace(analysis,analysis)
-        #print analysis
+        
+#print analysis
 
         # Adding TES as a POI the signal ZTT 
         tes_name = "tes"
@@ -195,7 +231,7 @@ def harvest(setup, year, obs, **kwargs):
                 print("ERROR : wrong definition of tesRegions in the config file ")
         else: 
           tes_name = "tes_%s"%(listbin[0])
-        print(("tes: %s"%(tes_name)))
+        print("tes: %s"%(tes_name))
 
         if("TESvariations" in setup):
           #print("TESvariations")
@@ -207,7 +243,7 @@ def harvest(setup, year, obs, **kwargs):
         tes.setConstant(True)
 
     
-        # MORPHING
+        # MORPHING (only for ZTT)
         print(green(">>> morphing..."))
         BuildCMSHistFuncFactory(workspace, harvester, tes, "ZTT")
     
@@ -237,6 +273,7 @@ def harvest(setup, year, obs, **kwargs):
         harvester.SetGroup( 'jtf',      [ ".*jTauFake.*"     ])
         harvester.SetGroup( 'ltf',      [ ".*mTauFake.*"     ])
         harvester.SetGroup( 'zpt',      [ ".*shape_dy.*"     ])
+        harvester.SetGroup( 'shape_ttbar', [ ".*shape_ttbar.*"  ])
         harvester.SetGroup( 'xsec',     [ ".*xsec.*"         ])
         harvester.SetGroup( 'norm',     [ ".*(lumi|Xsec|Norm|norm_qcd).*" ])
         harvester.SetGroup( 'tid',      [ ".*tid.*"          ])
@@ -270,24 +307,22 @@ def harvest(setup, year, obs, **kwargs):
           newfilename = datacardtxt.replace('$TAG',outdir).replace('$ANALYSIS',analysis).replace('$CHANNEL',channel).replace('$BINID',DM).replace('$ERA',era)
           if os.path.exists(oldfilename):
             os.rename(oldfilename, newfilename)
-            print(('>>> renaming "%s" -> "%s"'%(oldfilename,newfilename)))
+            print('>>> renaming "%s" -> "%s"' % (oldfilename, newfilename))
           else:
-            print(('>>> Warning! "%s" does not exist!'%(oldfilename)))
+            print('>>> Warning! "%s" does not exist!' % (oldfilename))
         
-def scaleProcess(process,scale): 
-  """Help function to scale a given process."""
-  process.set_rate(process.rate()*scale)
+
   
 def setYield(process,file,dirname,scale=1.):
-  """Help function to get yield from file."""
-  histname = "%s/%s"%(dirname,process.process()) if dirname else process.process()
-  hist = file.Get(histname)
-  if not hist:
-    print(('setYield: Warning! Did not find histogram "%s" in "%s"'%(histname,file.GetName())))
-  if hist.GetXaxis().GetNbins()>1:
-    print(('setYield: Warning! Histogram "%s" has more than one bin!'%(histname)))
-  rate = hist.GetBinContent(1)
-  process.set_rate(rate*scale)
+    """Help function to get yield from file."""
+    histname = "%s/%s"%(dirname,process.process()) if dirname else process.process()
+    hist = file.Get(histname)
+    if not hist:
+        print('setYield: Warning! Did not find histogram "%s" in "%s"' % (histname, file.GetName()))
+    if hist.GetXaxis().GetNbins()>1:
+        print('setYield: Warning! Histogram "%s" has more than one bin!' % (histname))
+    rate = hist.GetBinContent(1)
+    process.set_rate(rate*scale)
   
 def green(string,**kwargs):
     return kwargs.get('pre',"")+"\x1b[0;32;40m%s\033[0m"%string
@@ -295,8 +330,8 @@ def green(string,**kwargs):
 def ensureDirectory(dirname):
     """Make directory if it does not exist."""
     if not os.path.exists(dirname):
-      os.makedirs(dirname)
-      print((">>> made directory " + dirname))
+        os.makedirs(dirname)
+        print(">>> made directory " + dirname)
     return dirname
 
 
@@ -304,7 +339,7 @@ def ensureDirectory(dirname):
 def main(args):
 
     ## Open and import information from config file here to be publicly accessible in all functions
-    print(("Using configuration file: %s"%args.config))
+    print("Using configuration file: %s" % args.config)
     with open(args.config, 'r') as file:
         setup = yaml.safe_load(file)
 
@@ -318,9 +353,9 @@ def main(args):
         args.extratag += "_MDF"
 
     tag = setup["tag"] if "tag" in setup else ""
-    print(("producing datacards for %s"%(args.year)))
+    print("producing datacards for %s" % (args.year))
     for obs in observables:
-        print(("producing datacards for %s"%(obs)))
+        print("producing datacards for %s" % (obs))
         harvest(setup,args.year,obs,tag=tag,extratag=args.extratag,indir=indir,multiDimFit=args.multiDimFit,verbosity=verbosity)
     
 
@@ -342,5 +377,4 @@ if __name__ == '__main__':
 
   main(args)
   print(">>>\n>>> done harvesting\n")
-    
 

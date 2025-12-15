@@ -31,6 +31,7 @@ source /cvmfs/cms.cern.ch/cmsset_default.sh
 cd ${CMSSW_PATH}
 # Set up the CMSSW environment variables (equivalent to cmsenv)
 eval `scramv1 runtime -sh`
+cmsenv
 # Return to the initial working directory of the job
 cd -
 echo "CMSSW_BASE is now: $CMSSW_BASE"
@@ -41,17 +42,17 @@ echo "Environment setup complete."
 cd ${CMSSW_PATH}/TauFW/Fitter
 
 # Define a log file specific to this job
-TAG = "dzytest_zmm"
+TAG="test_upart_1208_v1"
 LOG_FILE="condor_job_output_${DECAY_MODE}_${TAG}.log"
 echo ""
 echo ">>> Running createinputsTES.py for ${DECAY_MODE}..."
 echo "    Log file will be: ${LOG_FILE}"
 
 # Execute your command, redirecting all output (stdout and stderr) to the log file
-python3 TauES/createinputsTES_v2.py \
+python3 TauES/createinputsTES.py \
     -y 2024 \
     -o input_${TAG} \
-    -c TauES_ID/config/Default_FitSetupTES_mutau_DM_mt65pt_3pt.yml \
+    -c TauES_ID/config/Default_FitSetupTES_mutau_UparT_v1.yml \
     -j Medium \
     -e VVLoose > ${LOG_FILE} 2>&1
 
@@ -73,20 +74,20 @@ LOCAL_OUTPUT_PATH="input_${TAG}/againstjet_Medium/againstelectron_VVLoose/rebinn
 # Check if the file was actually created
 if [ -f "${LOCAL_OUTPUT_PATH}" ]; then
     echo "    Output file found: ${LOCAL_OUTPUT_PATH}"
-    echo "    Copying to EOS directory: ${EOS_OUTPUT_DIR}"
+    # echo "    Copying to EOS directory: ${EOS_OUTPUT_DIR}"
     
     # Ensure the target directory on EOS exists
     # mkdir -p ${EOS_OUTPUT_DIR}
     
     # Copy the file
-    cp ${LOCAL_OUTPUT_PATH} ${EOS_OUTPUT_DIR}/
+    # cp ${LOCAL_OUTPUT_PATH} ${EOS_OUTPUT_DIR}/
     
     # Check if the copy was successful
-    if [ $? -eq 0 ]; then
-        echo "    Successfully copied to ${EOS_OUTPUT_DIR}/${OUTPUT_BASENAME}"
-    else
-        echo "!!! ERROR: Failed to copy output file to EOS!"
-    fi
+    # if [ $? -eq 0 ]; then
+        # echo "    Successfully copied to ${EOS_OUTPUT_DIR}/${OUTPUT_BASENAME}"
+    # else
+        # echo "!!! ERROR: Failed to copy output file to EOS!"
+    # fi
 else
     echo "!!! CRITICAL ERROR: Output ROOT file was not found at ${LOCAL_OUTPUT_PATH}!"
     echo "!!! This likely confirms that running with -d alone produces no output."
